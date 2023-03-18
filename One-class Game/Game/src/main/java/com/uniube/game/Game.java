@@ -6,98 +6,95 @@ package com.uniube.game;
 
 import java.util.Scanner;
 import java.security.SecureRandom;
-/**
- *
- * @author User
- */
+
 public class Game {
     
     private static final Scanner scanner = new Scanner(System.in);
     private static final SecureRandom random = new SecureRandom();
     private static final int NUMERO_DE_CARTAS = 52;
-    private static int pilha = NUMERO_DE_CARTAS - 1;
-    private static int index = 0;
-    private static boolean jogo = true;
+    private static int pilha;
+    private static int indexBaralho = 0;
+    private static String[] maoJogador = new String[10];
+    private static String[] maoDealer = new String[6];
+    private static String[] valores = {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Valete", "Dama", "Rei"};
+    private static String[] naipes = {"Paus", "Ouros", "Copas", "Espadas"};
+    private static String[] baralho = new String[NUMERO_DE_CARTAS];
+    private static boolean jogoAcabou = false;
+    private static boolean jogarDeNovo = true;
     private static int vitorias = 0;
-    
-    
-    
-    
+    private static String nomeJogador;
+
     public static void main(String[] args) {
+
+        mostrarBoasVindas();
+        gerarBaralho();
         
-        boolean jogoAcabou = false;
-        String[] maoJogador = new String[10];
-        String[] maoDealer = new String[6]; //dealer so pede no maximo 5;
-        String[] valores = {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Valete", "Dama", "Rei"};
-        String[] naipes = {"Paus", "Ouros", "Copas", "Espadas"};
-        String[] baralho = new String[NUMERO_DE_CARTAS];
-        
-        
-        //Gerar baralho
-        for (String valor : valores) {
-            for (String naipe : naipes) {
-                baralho[index++] = String.format("%s de %s", valor, naipe);
-            }
-        }
-        
-        System.out.printf("C A S S I N O%nU N I U B E%n%n");
-        System.out.print("Bem vindo, jogador! Qual o seu nome? >> ");
-        String nome = scanner.nextLine();
-        System.out.printf("Certo, %s. Pressione Enter quando estiver pronto. >> ", nome);
-        scanner.nextLine();
-        System.out.print("\n\n");
-        
-        while (jogo) {
-            jogoAcabou = false;
-            int valorMaoJogador = 0;
-            int valorMaoDealer = 0;
-            String pedirOuParar;
-            System.out.printf("[Vitorias: %d]%n%n",vitorias);
-            embaralhar(baralho);
-            distribuirDuasCartas(maoJogador, maoDealer, baralho);
+        while (jogarDeNovo) {
             
+            pilha = NUMERO_DE_CARTAS - 1;
+            limparConsole();
+            jogoAcabou = false;
+            int valorMaoJogador;
+            int valorMaoDealer;
+            String pedirOuParar;
+            embaralhar();
+            distribuirDuasCartas();
             valorMaoJogador = getValorMao(maoJogador);
             valorMaoDealer = getValorMao(maoDealer);
-            
+
+            System.out.printf("[Vitorias: %d]%n%n", vitorias);
             mostrarCartas(maoDealer, "Dealer", true);
-            mostrarCartas(maoJogador, nome, false);
-            if (valorMaoJogador == 21 || valorMaoDealer == 21) {
-                jogoAcabou = true;
-            }
-            
+            mostrarCartas(maoJogador, nomeJogador, false);
+            jogoAcabou = valorMaoJogador == 21 || valorMaoDealer == 21;
+
             while (!jogoAcabou) {
-                System.out.printf("%s, PEDIR(1) ou PARAR(0): ",nome);
+                System.out.printf("%s, PEDIR(1) ou PARAR(0): ",nomeJogador);
                 pedirOuParar = scanner.nextLine();
-                if(pedirOuParar.equals("1")) {
-                    distribuirCarta(maoJogador, baralho);
+                switch (pedirOuParar) {
+                    case "1":
+                        distribuirCarta(maoJogador, baralho);
+                        System.out.println();
+                        mostrarCartas(maoDealer, "Dealer", false);
+                        mostrarCartas(maoJogador, nomeJogador, false);
+                        jogoAcabou = checarFimDeJogo(maoJogador, maoDealer); 
+                        break;
+                    default:
+                        jogarDealer(maoDealer, baralho);
+                        System.out.println();
+                        mostrarCartas(maoDealer, "Dealer", false);
+                        mostrarCartas(maoJogador, nomeJogador, false);
+                        jogoAcabou = checarFimDeJogo(maoJogador, maoDealer)  || getValorMao(maoDealer) > getValorMao(maoJogador) || getValorMao(maoDealer) == 17 || getValorMao(maoDealer) < getValorMao(maoJogador); 
                 }
-                else {
-                    jogarDealer(maoDealer, baralho);
-                    mostrarCartas(maoDealer, "Dealer", false);
-                    mostrarCartas(maoJogador, nome, false);
-                    break;
-                }
-                System.out.println();
-                mostrarCartas(maoDealer, "Dealer", false);
-                mostrarCartas(maoJogador, nome, false);
-                jogoAcabou = checarFimDeJogo(maoJogador, maoDealer);
             }
             
-            mostrarStatus(maoJogador, maoDealer);
+            mostrarStatus();
             limparMao(maoJogador);
             limparMao(maoDealer);
-            System.out.printf("%n%s, vamos jogar de novo? (1/0)", nome);
-            jogo = scanner.nextLine().equals("1");
+            System.out.printf("%n%s, vamos jogar de novo? (1/0)", nomeJogador);
+            jogarDeNovo = scanner.nextLine().equals("1");
         }
-        
-        
-        
+            
     }
     
-    
-    
-    public static void distribuirCarta(String[] mao, String[] baralho) {
-        //se tiver vazia, add a ultima carta da pilha e decrementa ela
+    private static void mostrarBoasVindas() {
+        System.out.printf("C A S S I N O%nU N I U B E%n%n");
+        System.out.print("Bem vindo, jogador! Qual o seu nome? >> ");
+        nomeJogador = scanner.nextLine();
+        System.out.printf("Certo, %s. Pressione Enter quando estiver pronto. >> ", nomeJogador);
+        scanner.nextLine();
+        System.out.print("\n\n");
+    }
+
+    private static void gerarBaralho() {
+        for (String valor : valores) {
+            for (String naipe : naipes) {
+                baralho[indexBaralho++] = String.format("%s de %s", valor, naipe);
+            }
+        }
+    }
+
+    private static void distribuirCarta(String[] mao, String[] baralho) {
+        //se tiver vazia, adiciona a ultima carta da pilha e decrementa ela
         for (int i = 0; i < mao.length; i++) {
             if (mao[i] == null) {
                 mao[i] = baralho[pilha--];
@@ -106,15 +103,14 @@ public class Game {
         }
     }
     
-    public static void distribuirDuasCartas(String[] maoJogador, String[] maoDealer, String[] baralho) {
+    private static void distribuirDuasCartas() {
         for (int i = 0; i < 2; i++) {
             distribuirCarta(maoJogador, baralho);
             distribuirCarta(maoDealer, baralho);
         }
     }
     
-    
-    public static void mostrarCartas(String[] mao, String nome, boolean flag) {
+    private static void mostrarCartas(String[] mao, String nome, boolean flag) {
         if (!flag) {
             System.out.printf("%s: [ ", nome);
             for (String carta : mao) {
@@ -128,8 +124,7 @@ public class Game {
         System.out.printf("%s: [ %s [?] ] (%d)%n", nome, mao[0], getValorCarta(mao[0]));
     }
     
-    
-    public static void embaralhar(String[] baralho) {
+    private static void embaralhar() {
         int ultimoIndex = baralho.length - 1;
         String temp;
         int randomIndex;
@@ -143,14 +138,13 @@ public class Game {
         }
     }
     
-    public static void jogarDealer(String[] maoDealer, String[] baralho) {
+    private static void jogarDealer(String[] maoDealer, String[] baralho) {
         while(getValorMao(maoDealer) < 17) {
             distribuirCarta(maoDealer, baralho);
         }
     }
     
-    
-    public static int getValorCarta(String carta) {
+    private static int getValorCarta(String carta) {
         //charAt(0) vai dar problema se o numero for 10, vai retornar apenas 1.
         int valorCarta;
         char primeiroValor = carta.charAt(0);
@@ -167,8 +161,7 @@ public class Game {
         return valorCarta;
     }
     
-    
-    public static int getValorMao(String[] mao) {
+    private static int getValorMao(String[] mao) {
         int somaCartas = 0;
         int ases = 0;
         for (String carta : mao) {
@@ -184,22 +177,20 @@ public class Game {
         return somaCartas;
     }
     
-    
-    public static boolean ganhou(String[] mao) {
+    private static boolean ganhou(String[] mao) {
         return getValorMao(mao) == 21;
     }
     
-    
-    public static boolean estourou(String[] mao) {
+    private static boolean estourou(String[] mao) {
         return getValorMao(mao) > 21;
     }
     
-    public static void limparConsole() {
+    private static void limparConsole() {
         System.out.print("\033[H\033[2J");
         System.out.flush();
     }
     
-    public static void limparMao(String[] mao) {
+    private static void limparMao(String[] mao) {
         for (int i = 0; i < mao.length - 1; i++) {
             if (mao[i] != null) {
                 mao[i] = null;
@@ -207,13 +198,13 @@ public class Game {
         }
     }
     
-    public static boolean checarFimDeJogo(String[] maoJogador, String[] maoDealer) {
-        return estourou(maoJogador) || estourou(maoDealer) || ganhou(maoJogador) || ganhou(maoDealer);
+    private static boolean checarFimDeJogo(String[] maoJogador, String[] maoDealer) {
+        return estourou(maoJogador) || estourou(maoDealer) || ganhou(maoJogador) || ganhou(maoDealer) || getValorMao(maoDealer) == getValorMao(maoJogador);
     }
     
-    public static void mostrarStatus(String[] maoJogador, String[] maoDealer) {
-        if (ganhou(maoJogador)) {
-            System.out.println("Jogador, você ganhou!");
+    private static void mostrarStatus() {
+        if ((ganhou(maoJogador) || getValorMao(maoJogador) > getValorMao(maoDealer)) && !estourou(maoJogador)) {
+            System.out.printf("%s, você ganhou!%n", nomeJogador);
             vitorias++;
         }
         else if (ganhou(maoDealer)) {
@@ -229,12 +220,12 @@ public class Game {
         else if (ganhou(maoDealer)){
             System.out.println("O Dealer ganhou!");
         }
-        else if (getValorMao(maoJogador) > getValorMao(maoDealer)) {
-            System.out.println("Você ganhou!");
-            vitorias++;
+        else if (getValorMao(maoJogador) == getValorMao(maoDealer)){
+            System.out.println("Empate!");
         }
         else {
             System.out.println("Você Perdeu!");
         }
     }
+
 }
