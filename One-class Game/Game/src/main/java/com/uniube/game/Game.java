@@ -38,7 +38,12 @@ public class Game {
             int valorMaoDealer;
             String pedirOuParar;
             embaralhar();
-            distribuirDuasCartas();
+
+            distribuirCarta(maoJogador);
+            distribuirCarta(maoDealer);
+            distribuirCarta(maoJogador);
+            distribuirCarta(maoDealer);
+
             valorMaoJogador = getValorMao(maoJogador);
             valorMaoDealer = getValorMao(maoDealer);
 
@@ -52,28 +57,28 @@ public class Game {
                 pedirOuParar = scanner.nextLine();
                 switch (pedirOuParar) {
                     case "1":
-                        distribuirCarta(maoJogador, baralho);
+                        distribuirCarta(maoJogador);
                         System.out.println();
                         mostrarCartas(maoDealer, "Dealer", false);
                         mostrarCartas(maoJogador, nomeJogador, false);
-                        jogoAcabou = checarFimDeJogo(maoJogador, maoDealer); 
+                        jogoAcabou = checarFimDeJogo(); 
                         break;
                     default:
-                        jogarDealer(maoDealer, baralho);
+                        jogarDealer();
                         System.out.println();
                         mostrarCartas(maoDealer, "Dealer", false);
                         mostrarCartas(maoJogador, nomeJogador, false);
-                        jogoAcabou = checarFimDeJogo(maoJogador, maoDealer)  || getValorMao(maoDealer) > getValorMao(maoJogador) || getValorMao(maoDealer) == 17 || getValorMao(maoDealer) < getValorMao(maoJogador); 
+                        jogoAcabou = checarFimDeJogo()  || getValorMao(maoDealer) > getValorMao(maoJogador) || getValorMao(maoDealer) == 17 || getValorMao(maoDealer) < getValorMao(maoJogador); 
                 }
             }
             
             mostrarStatus();
             limparMao(maoJogador);
             limparMao(maoDealer);
-            System.out.printf("%n%s, vamos jogar de novo? (1/0)", nomeJogador);
+            System.out.printf("%n%s, vamos jogar de novo? (1/0): ", nomeJogador);
             jogarDeNovo = scanner.nextLine().equals("1");
         }
-            
+        scanner.close();
     }
     
     private static void mostrarBoasVindas() {
@@ -93,7 +98,7 @@ public class Game {
         }
     }
 
-    private static void distribuirCarta(String[] mao, String[] baralho) {
+    private static void distribuirCarta(String[] mao) {
         //se tiver vazia, adiciona a ultima carta da pilha e decrementa ela
         for (int i = 0; i < mao.length; i++) {
             if (mao[i] == null) {
@@ -103,25 +108,18 @@ public class Game {
         }
     }
     
-    private static void distribuirDuasCartas() {
-        for (int i = 0; i < 2; i++) {
-            distribuirCarta(maoJogador, baralho);
-            distribuirCarta(maoDealer, baralho);
-        }
-    }
-    
     private static void mostrarCartas(String[] mao, String nome, boolean flag) {
-        if (!flag) {
-            System.out.printf("%s: [ ", nome);
-            for (String carta : mao) {
-                if (carta != null) {
-                    System.out.printf("%s ", carta);
-                }
-            }
-            System.out.printf("] (%d) %n", getValorMao(mao));
+        if (flag) {
+            System.out.printf("%s: [ %s [?] ] (%d)%n", nome, mao[0], getValorCarta(mao[0]));
             return;
         }
-        System.out.printf("%s: [ %s [?] ] (%d)%n", nome, mao[0], getValorCarta(mao[0]));
+        System.out.printf("%s: [ ", nome);
+        for (String carta : mao) {
+            if (carta != null) {
+                System.out.printf("%s ", carta);
+            }
+        }
+        System.out.printf("] (%d) %n", getValorMao(mao));
     }
     
     private static void embaralhar() {
@@ -138,9 +136,9 @@ public class Game {
         }
     }
     
-    private static void jogarDealer(String[] maoDealer, String[] baralho) {
+    private static void jogarDealer() {
         while(getValorMao(maoDealer) < 17) {
-            distribuirCarta(maoDealer, baralho);
+            distribuirCarta(maoDealer);
         }
     }
     
@@ -198,7 +196,7 @@ public class Game {
         }
     }
     
-    private static boolean checarFimDeJogo(String[] maoJogador, String[] maoDealer) {
+    private static boolean checarFimDeJogo() {
         return estourou(maoJogador) || estourou(maoDealer) || ganhou(maoJogador) || ganhou(maoDealer) || getValorMao(maoDealer) == getValorMao(maoJogador);
     }
     
