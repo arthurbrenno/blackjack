@@ -16,8 +16,8 @@ public class Game {
     private static int indexBaralho = 0;
     private static String[] maoJogador = new String[10];
     private static String[] maoDealer = new String[6];
-    private static String[] valores = {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Valete", "Dama", "Rei"};
-    private static String[] naipes = {"Paus", "Ouros", "Copas", "Espadas"};
+    private static final String[] valores = {"A", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Valete", "Dama", "Rei"};
+    private static final String[] naipes = {"Paus", "Ouros", "Copas", "Espadas"};
     private static String[] baralho = new String[NUMERO_DE_CARTAS];
     private static boolean jogoAcabou = false;
     private static boolean jogarDeNovo = true;
